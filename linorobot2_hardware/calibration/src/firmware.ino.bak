@@ -19,15 +19,8 @@
 #define ENCODER_OPTIMIZE_INTERRUPTS
 #include "encoder.h"
 #include "kinematics.h"
-#include "FIT_PowerManagement.h"
 
 #define SAMPLE_TIME 10 //s
-
-#define LED_PIN_L    8
-#define LED_PIN_R    7
-
-#define  NUMBER_OF_LED_L 100
-#define  NUMBER_OF_LED_R 100
 
 Encoder motor1_encoder(MOTOR1_ENCODER_A, MOTOR1_ENCODER_B, COUNTS_PER_REV1, MOTOR1_ENCODER_INV);
 Encoder motor2_encoder(MOTOR2_ENCODER_A, MOTOR2_ENCODER_B, COUNTS_PER_REV2, MOTOR2_ENCODER_INV);
@@ -38,8 +31,6 @@ Motor motor1_controller(PWM_FREQUENCY, PWM_BITS, MOTOR1_INV, MOTOR1_PWM, MOTOR1_
 Motor motor2_controller(PWM_FREQUENCY, PWM_BITS, MOTOR2_INV, MOTOR2_PWM, MOTOR2_IN_A, MOTOR2_IN_B);
 Motor motor3_controller(PWM_FREQUENCY, PWM_BITS, MOTOR3_INV, MOTOR3_PWM, MOTOR3_IN_A, MOTOR3_IN_B);
 Motor motor4_controller(PWM_FREQUENCY, PWM_BITS, MOTOR4_INV, MOTOR4_PWM, MOTOR4_IN_A, MOTOR4_IN_B);
-
-FITPM PM(LM5066I_SLAVE_ADDR,LM5066I_I2C_SPEED,BTT6030_IS_L_PIN,BTT6030_IS_R_PIN,BTT6030_IN_L_PIN,BTT6030_IN_R_PIN);
 
 Kinematics kinematics(
     Kinematics::LINO_BASE,
@@ -62,11 +53,6 @@ void setup()
     Serial.begin(9600);
     while (!Serial) {
     }
-
-    PM.begin();
-    PM.registBatteryPercentageCallBack(BatteryCallback);
-    PM.led_setup(NUMBER_OF_LED_L,NUMBER_OF_LED_R,LED_PIN_L,LED_PIN_R,NEO_GRB + NEO_KHZ800);
-
     Serial.println("Sampling process will spin the motors at its maximum RPM.");
     Serial.println("Please ensure that the robot is ELEVATED and there are NO OBSTRUCTIONS to the wheels.");
     Serial.println("");
@@ -104,12 +90,6 @@ void loop()
             cmd = "";
         }
     }
-    PM.processPowerManagement();
-}
-
-void BatteryCallback(int percentage)
-{
-  Serial.printf("Battery percentage:%d\r\n",percentage);
 }
 
 void sampleMotors(bool show_summary)
@@ -136,7 +116,6 @@ void sampleMotors(bool show_summary)
         {
             if(micros() - start_time >= SAMPLE_TIME * 1000000)
             {
-                PM.enableHSwitch(0,0,true);
                 motors[i]->spin(0);
                 Serial.println("");
                 break;
@@ -147,7 +126,7 @@ void sampleMotors(bool show_summary)
                 last_status = micros();
                 Serial.print(".");
             }
-            PM.enableHSwitch(PWM_MAX,PWM_MAX,true);
+
             motors[i]->spin(PWM_MAX);
         }
 
