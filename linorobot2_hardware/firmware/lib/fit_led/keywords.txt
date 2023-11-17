@@ -1,0 +1,49 @@
+#######################################
+# Syntax Coloring Map For Adafruit_NeoPixel
+#######################################
+# Class
+#######################################
+
+FITLED	KEYWORD1
+
+#######################################
+# Methods and Functions
+#######################################	
+
+isbLedOnL			KEYWORD2
+isbLedOnR			KEYWORD2
+turn_r_led_onoff			KEYWORD2
+turn_l_led_onoff		KEYWORD2
+setLedStatus			KEYWORD2
+blink_LED		KEYWORD2
+breatheLed			KEYWORD2
+change_led_color		KEYWORD2
+setbrightness		KEYWORD2
+setblinkInterval		KEYWORD2
+setbreatheInterval		KEYWORD2
+setup		KEYWORD2
+process_led			KEYWORD2
+
+
+#######################################
+# Constants
+#######################################
+
+LED_L_PIN		LITERAL1
+LED_R_PIN		LITERAL1
+LED_L_COUNT		LITERAL1
+LED_R_COUNT		LITERAL1
+LED_STATES_OFF			LITERAL1
+LED_STATES_DRIVING			LITERAL1
+LED_STATES_REVERSE			LITERAL1
+LED_STATES_TURN_L			LITERAL1
+LED_STATES_TURN_R			LITERAL1
+LED_STATES_CAUTION_ZONE			LITERAL1
+LED_STATES_STANDBY		LITERAL1
+LED_STATES_FAULT		LITERAL1
+LED_STATES_CHARGING		LITERAL1
+LED_L		LITERAL1
+LED_R		LITERAL1
+LED_LR		LITERAL1
+
+
