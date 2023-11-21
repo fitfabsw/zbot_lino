@@ -159,6 +159,11 @@ void  FITLED::setLedStatus(uint8_t status)
 {
   if(led_status!=status)
   {
+    if(led_status==LED_STATES_BATTERY_LOW)
+      setblinkInterval(80);
+    else
+      setblinkInterval(666);
+
     prv_led_status=led_status;
     led_status=status;
     blinkTickCount =0;//ms
