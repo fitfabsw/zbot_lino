@@ -98,6 +98,70 @@ void loop()
             Serial.println("\r\n");
             sampleMotors(1);
         }
+        else if(character == '\r' and cmd.equals("led_low\r"))
+        {
+            // #define LED_STATES_OFF           0x00
+            // #define LED_STATES_DRIVING       0x01
+            // #define LED_STATES_REVERSE       0x02
+            // #define LED_STATES_TURN_L        0x03
+            // #define LED_STATES_TURN_R        0x04
+            // #define LED_STATES_CAUTION_ZONE  0x05
+            // #define LED_STATES_STANDBY       0x06
+            // #define LED_STATES_FAULT         0x07
+            // #define LED_STATES_CHARGING      0x08
+            // #define LED_STATES_BATTERY_LOW   0x09
+            cmd = "";
+            Serial.println("LED_STATES_BATTERY_LOW\r\n");
+            PM.setLedStatus(LED_STATES_BATTERY_LOW);
+        }
+        else if(character == '\r' and cmd.equals("led_drv\r"))
+        {
+            cmd = "";
+            Serial.println("LED_STATES_DRIVING\r\n");
+            PM.setLedStatus(LED_STATES_DRIVING);
+        }
+        else if(character == '\r' and cmd.equals("led_rev\r"))
+        {
+            cmd = "";
+            Serial.println("LED_STATES_REVERSE\r\n");
+            PM.setLedStatus(LED_STATES_REVERSE);
+        }
+        else if(character == '\r' and cmd.equals("led_l\r"))
+        {
+            cmd = "";
+            Serial.println("LED_STATES_TURN_L\r\n");
+            PM.setLedStatus(LED_STATES_TURN_L);
+        }
+        else if(character == '\r' and cmd.equals("led_r\r"))
+        {
+            cmd = "";
+            Serial.println("LED_STATES_TURN_R\r\n");
+            PM.setLedStatus(LED_STATES_TURN_R);
+        }
+        else if(character == '\r' and cmd.equals("led_zone\r"))
+        {
+            cmd = "";
+            Serial.println("LED_STATES_CAUTION_ZONE\r\n");
+            PM.setLedStatus(LED_STATES_CAUTION_ZONE);
+        }
+        else if(character == '\r' and cmd.equals("led_std\r"))
+        {
+            cmd = "";
+            Serial.println("LED_STATES_STANDBY\r\n");
+            PM.setLedStatus(LED_STATES_STANDBY);
+        }
+        else if(character == '\r' and cmd.equals("led_flt\r"))
+        {
+            cmd = "";
+            Serial.println("LED_STATES_FAULT\r\n");
+            PM.setLedStatus(LED_STATES_FAULT);
+        }
+        else if(character == '\r' and cmd.equals("led_chg\r"))
+        {
+            cmd = "";
+            Serial.println("LED_STATES_CHARGING\r\n");
+            PM.setLedStatus(LED_STATES_CHARGING);
+        }
         else if(character == '\r')
         {
             Serial.println("");
