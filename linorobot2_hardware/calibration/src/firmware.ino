@@ -162,6 +162,30 @@ void loop()
             Serial.println("LED_STATES_CHARGING\r\n");
             PM.setLedStatus(LED_STATES_CHARGING);
         }
+        else if(character == '\r' and cmd.equals("en_sw_l\r"))
+        {
+            cmd = "";
+            Serial.println("enable left switch\r\n");
+            PM.enableLeftSwitch(true);
+        }
+        else if(character == '\r' and cmd.equals("en_sw_r\r"))
+        {
+            cmd = "";
+            Serial.println("enable right switch\r\n");
+            PM.enableRightSwitch(true);
+        }
+        else if(character == '\r' and cmd.equals("dis_sw_l\r"))
+        {
+            cmd = "";
+            Serial.println("disable left switch\r\n");
+            PM.enableLeftSwitch(false);
+        }
+        else if(character == '\r' and cmd.equals("dis_sw_r\r"))
+        {
+            cmd = "";
+            Serial.println("disable right switch\r\n");
+            PM.enableRightSwitch(false);
+        }
         else if(character == '\r')
         {
             Serial.println("");
@@ -200,7 +224,7 @@ void sampleMotors(bool show_summary)
         {
             if(micros() - start_time >= SAMPLE_TIME * 1000000)
             {
-                PM.enableHSwitch(0,0,true);
+                // PM.enableHSwitch(0,0,true);
                 motors[i]->spin(0);
                 Serial.println("");
                 break;
@@ -211,7 +235,7 @@ void sampleMotors(bool show_summary)
                 last_status = micros();
                 Serial.print(".");
             }
-            PM.enableHSwitch(PWM_MAX,PWM_MAX,true);
+            // PM.enableHSwitch(PWM_MAX,PWM_MAX,true);
             motors[i]->spin(PWM_MAX);
         }
 
