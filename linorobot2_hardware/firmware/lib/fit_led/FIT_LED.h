@@ -6,6 +6,12 @@
  #include <avr/power.h> // Required for 16 MHz Adafruit Trinket
 #endif
 
+#define LED_PIN_L    9
+#define LED_PIN_R    10
+
+#define  NUMBER_OF_LED_L 100
+#define  NUMBER_OF_LED_R 100
+
 #define LED_L_PIN    6
 #define LED_R_PIN    5
 

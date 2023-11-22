@@ -170,12 +170,12 @@ void FITBTT6030::processISAVGvalue()
   }
 }
 
-float FITBTT6030::getLeftISvalue()
+int16_t  FITBTT6030::getLeftISAVGvalue()
 {
   return leftISAVGvalue;
 }
 
-float FITBTT6030::getRightISAVGvalue()
+int16_t  FITBTT6030::getRightISAVGvalue()
 {
   return rightISAVGvalue;
 }
@@ -227,23 +227,23 @@ void FITBTT6030::processBTT6030()
     }
   }
 
-  if(isLeftSwitchOn()&&!isLeftOverCurrent()&&digitalRead(LeftSwitchPin)==LOW)
+  if(isLeftSwitchOn()&&!isLeftOverCurrent()&&!isRightOverCurrent()&&digitalRead(LeftSwitchPin)==LOW)
   {
     dbg_printf("turn on left\r\n");
     digitalWrite(LeftSwitchPin, HIGH);
   }
-  else if((!isLeftSwitchOn()||isLeftOverCurrent())&&digitalRead(LeftSwitchPin)==HIGH)
+  else if((!isLeftSwitchOn()||isLeftOverCurrent()||isRightOverCurrent())&&digitalRead(LeftSwitchPin)==HIGH)
   {
     dbg_printf("turn off left\r\n");
     digitalWrite(LeftSwitchPin, LOW);
   }
 
-  if(isRightSwitchOn()&&!isRightOverCurrent()&&digitalRead(RightSwitchPin)==LOW)
+  if(isRightSwitchOn()&&!isRightOverCurrent()&&!isLeftOverCurrent()&&digitalRead(RightSwitchPin)==LOW)
   {
     dbg_printf("turn on right\r\n");
     digitalWrite(RightSwitchPin, HIGH);
   }
-  else if((!isRightSwitchOn()||isRightOverCurrent())&&digitalRead(RightSwitchPin)==HIGH)
+  else if((!isRightSwitchOn()||isRightOverCurrent()||isLeftOverCurrent())&&digitalRead(RightSwitchPin)==HIGH)
   {
     dbg_printf("turn off right\r\n");
     digitalWrite(RightSwitchPin, LOW);

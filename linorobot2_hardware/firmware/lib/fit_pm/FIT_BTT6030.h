@@ -11,12 +11,12 @@
 class FITBTT6030{
 
 public:
-FITBTT6030(int16_t isLeftPin = 26,int16_t isRightPin = 27, int16_t LeftSwitchPin = 11, int16_t RightSwitchPin = 12);
+FITBTT6030(int16_t isLeftPin = 38,int16_t isRightPin = 39, int16_t LeftSwitchPin = 11, int16_t RightSwitchPin = 12);
 FITBTT6030();
 ~FITBTT6030();
 void processISAVGvalue();
-float getRightISAVGvalue();
-float getLeftISvalue();
+int16_t  getRightISAVGvalue();
+int16_t  getLeftISAVGvalue();
 void enableLeftSwitch(bool enable);
 void enableRightSwitch(bool enable);
 bool isLeftSwitchOn();

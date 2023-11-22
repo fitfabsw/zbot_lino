@@ -11,6 +11,7 @@ void FITPM::begin()
   initFITBTT6030();
   batteryLowNotifyInterval=0;
   batteryLowNotifyCount=0;
+  battery_callback_func_ptr=NULL;
 }
 
 void FITPM::enableHSwitch(double lpwm,double rpwm,bool bSwitchImmediately)

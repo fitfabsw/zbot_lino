@@ -53,8 +53,8 @@ Kinematics kinematics(
 
 long long int counts_per_rev[4];
 int total_motors = 4;
-Motor *motors[4] = {&motor1_controller, &motor2_controller, &motor3_controller, &motor4_controller};
-Encoder *encoders[4] = {&motor1_encoder, &motor2_encoder, &motor3_encoder, &motor4_encoder};
+Motor *motors[4] = {&motor1_controller, &motor2_controller/*, &motor3_controller, &motor4_controller*/};
+Encoder *encoders[4] = {&motor1_encoder, &motor2_encoder/*, &motor3_encoder, &motor4_encoder*/};
 String labels[4] = {"FRONT LEFT - M1: ", "FRONT RIGHT - M2: ", "REAR LEFT - M3: ", "REAR RIGHT - M4: "};
 
 void setup()

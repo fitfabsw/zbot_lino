@@ -33,12 +33,6 @@
 #include "FIT_PowerManagement.h"
 #include "debugmessage.h"
 
-#define LED_PIN_L    8
-#define LED_PIN_R    7
-
-#define  NUMBER_OF_LED_L 100
-#define  NUMBER_OF_LED_R 100
-
 #define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){rclErrorLoop();}}
 #define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
 #define EXECUTE_EVERY_N_MS(MS, X)  do { \

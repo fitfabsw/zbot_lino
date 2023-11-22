@@ -157,13 +157,15 @@ void  FITLED::turn_l_led_onoff(bool bEnable,uint32_t color,int brightness)
 
 void  FITLED::setLedStatus(uint8_t status)
 {
-  if(led_status!=status)
+
+  if(led_status!=status||status==LED_STATES_OFF)
   {
     if(led_status==LED_STATES_BATTERY_LOW)
-      setblinkInterval(80);
-    else
-      setblinkInterval(666);
-
+    {
+      if(status!=LED_STATES_BATTERY_LOW)
+        prv_led_status=status;
+      return;
+    }
     prv_led_status=led_status;
     led_status=status;
     blinkTickCount =0;//ms
@@ -402,6 +404,7 @@ void  FITLED::process_led()
         if(millis()-batteryLowTickCount>batteryLowInterval)
         {
           setblinkInterval(666);
+          led_status=LED_STATES_OFF;
           setLedStatus(prv_led_status);
           batteryLowTickCount=0;
         }
