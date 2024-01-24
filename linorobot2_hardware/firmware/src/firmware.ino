@@ -46,6 +46,8 @@ rcl_publisher_t imu_publisher;
 // rcl_publisher_t range_publisher;
 rcl_publisher_t range1_publisher;
 rcl_publisher_t range2_publisher;
+rcl_publisher_t range3_publisher;
+rcl_publisher_t range4_publisher;
 rcl_subscription_t twist_subscriber;
 rcl_subscription_t custom_subscriber;
 rcl_subscription_t led_subscriber;
@@ -55,6 +57,8 @@ sensor_msgs__msg__Imu imu_msg;
 // sensor_msgs__msg__Range range_msg;
 sensor_msgs__msg__Range range1_msg;
 sensor_msgs__msg__Range range2_msg;
+sensor_msgs__msg__Range range3_msg;
+sensor_msgs__msg__Range range4_msg;
 geometry_msgs__msg__Twist twist_msg;
 std_msgs__msg__Int32 custom_msg;
 
@@ -108,6 +112,8 @@ IMU imu;
 // HCSR04 range;
 HCSR04 range1("sonic1");
 HCSR04 range2("sonic2");
+HCSR04 range3("sonic3");
+HCSR04 range4("sonic4");
 bool in_brake = false;
 
 void setup()
@@ -117,14 +123,22 @@ void setup()
     bool imu_ok = imu.init();
     int trigPin1 = 25;
     int echoPin1 = 24;
-    int trigPin2 = 6;
-    int echoPin2 = 5;
+    int trigPin2 = 27;
+    int echoPin2 = 26;
+    int trigPin3 = 6;
+    int echoPin3 = 5;
+    int trigPin4 = 8;
+    int echoPin4 = 7;
     bool range1_ok = range1.init(trigPin1, echoPin1);
     bool range2_ok = range2.init(trigPin2, echoPin2);
+    bool range3_ok = range3.init(trigPin3, echoPin3);
+    bool range4_ok = range4.init(trigPin4, echoPin4);
 
     PM.begin();
     PM.registBatteryPercentageCallBack(BatteryCallback);
     PM.led_setup(NUMBER_OF_LED_L,NUMBER_OF_LED_R,LED_PIN_L,LED_PIN_R,NEO_GRB + NEO_KHZ800);
+    PM.enableLeftSwitch(true);
+    PM.enableRightSwitch(true);
 
     // if(!imu_ok)
     // {
@@ -176,8 +190,8 @@ void controlCallback(rcl_timer_t * timer, int64_t last_call_time)
     RCLC_UNUSED(last_call_time);
     if (timer != NULL)
     {
-       // moveBase();
-       // publishDataTest();
+       moveBase();
+       publishDataTest();
        PM.processLM5066I();
        PM.processBTT6030();
        PM.updateBatteryPercentage();
@@ -277,18 +291,30 @@ bool createEntities()
         "imu/data"
     ));
     // create range publisher
-    // RCCHECK(rclc_publisher_init_default(
-    //     &range1_publisher,
-    //     &node,
-    //     ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Range),
-    //     "range1/data"
-    // ));
-    // RCCHECK(rclc_publisher_init_default(
-    //     &range2_publisher,
-    //     &node,
-    //     ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Range),
-    //     "range2/data"
-    // ));
+    RCCHECK(rclc_publisher_init_default(
+        &range1_publisher,
+        &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Range),
+        "range1/data"
+    ));
+    RCCHECK(rclc_publisher_init_default(
+        &range2_publisher,
+        &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Range),
+        "range2/data"
+    ));
+    RCCHECK(rclc_publisher_init_default(
+        &range3_publisher,
+        &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Range),
+        "range3/data"
+    ));
+    RCCHECK(rclc_publisher_init_default(
+        &range4_publisher,
+        &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Range),
+        "range4/data"
+    ));
     // create motro_brake command subscriber
     RCCHECK(rclc_subscription_init_default(
         &custom_subscriber,
@@ -361,8 +387,10 @@ bool destroyEntities()
     rcl_publisher_fini(&imu_publisher, &node);
     rcl_subscription_fini(&twist_subscriber, &node);
     //
-    // rcl_publisher_fini(&range1_publisher, &node);
-    // rcl_publisher_fini(&range2_publisher, &node);
+    rcl_publisher_fini(&range1_publisher, &node);
+    rcl_publisher_fini(&range2_publisher, &node);
+    rcl_publisher_fini(&range3_publisher, &node);
+    rcl_publisher_fini(&range4_publisher, &node);
     rcl_subscription_fini(&custom_subscriber, &node);
     rcl_subscription_fini(&led_subscriber, &node);
     //
@@ -445,6 +473,8 @@ void publishDataTest()
     imu_msg = imu.getData();
     range1_msg = range1.getData();
     range2_msg = range2.getData();
+    range3_msg = range3.getData();
+    range4_msg = range4.getData();
     struct timespec time_stamp = getTime();
     odom_msg.header.stamp.sec = time_stamp.tv_sec;
     odom_msg.header.stamp.nanosec = time_stamp.tv_nsec;
@@ -454,10 +484,16 @@ void publishDataTest()
     range1_msg.header.stamp.nanosec = time_stamp.tv_nsec;
     range2_msg.header.stamp.sec = time_stamp.tv_sec;
     range2_msg.header.stamp.nanosec = time_stamp.tv_nsec;
+    range3_msg.header.stamp.sec = time_stamp.tv_sec;
+    range3_msg.header.stamp.nanosec = time_stamp.tv_nsec;
+    range4_msg.header.stamp.sec = time_stamp.tv_sec;
+    range4_msg.header.stamp.nanosec = time_stamp.tv_nsec;
     RCSOFTCHECK(rcl_publish(&imu_publisher, &imu_msg, NULL));
     RCSOFTCHECK(rcl_publish(&odom_publisher, &odom_msg, NULL));
     RCSOFTCHECK(rcl_publish(&range1_publisher, &range1_msg, NULL));
     RCSOFTCHECK(rcl_publish(&range2_publisher, &range2_msg, NULL));
+    RCSOFTCHECK(rcl_publish(&range3_publisher, &range3_msg, NULL));
+    RCSOFTCHECK(rcl_publish(&range4_publisher, &range4_msg, NULL));
 }
 
 void publishData()
