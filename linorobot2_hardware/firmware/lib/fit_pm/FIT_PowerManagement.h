@@ -13,6 +13,14 @@
 #define BTT6030_IN_R_PIN 12
 #define BATTERY_LOW_PERCENTAGE 20
 
+#define SOFT_E_STOP 1
+
+#if defined(SOFT_E_STOP)
+#define DEBOUNCE_TIME 30
+#define E_STOP_BUTTON 37
+#define E_STOP_DISABLE 0x00
+#define E_STOP_ENABLE  0x01
+#endif
 
 class FITPM : public FITLM5066I, public FITBTT6030, public FITLED{
 
@@ -27,10 +35,21 @@ void enableHSwitch(double lpwm,double rpwm,bool bSwitchImmediately);
 void updateBatteryPercentage();
 void registBatteryPercentageCallBack(void (*callback_func_ptr)(int));
 void (*battery_callback_func_ptr)(int);
+#if defined(SOFT_E_STOP)
+void process_E_STOP_BTN();
+void registEStopCallBack(void (*callback_func_ptr)(uint8_t));
+void (*Estop_callback_func_ptr)(uint8_t);
+#endif
 void begin();
+
 protected:
 unsigned long batteryLowNotifyInterval;//ms
 unsigned long batteryLowNotifyCount;//ms
+#if defined(SOFT_E_STOP)
+bool bE_STOP_BTN_Press;
+bool bE_STOP_ACTION;
+#endif
+
 };
 
 #endif//FITPM_H

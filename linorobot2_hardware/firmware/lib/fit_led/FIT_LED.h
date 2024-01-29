@@ -30,6 +30,7 @@
 #define LED_STATES_FAULT         0x07
 #define LED_STATES_CHARGING      0x08
 #define LED_STATES_BATTERY_LOW   0x09
+#define LED_STATES_E_STOP        0x0A
 
 #define LED_L  0x01
 #define LED_R  0x02
@@ -95,8 +96,8 @@ uint8_t brightnessL;
 uint8_t brightnessR;
 int brightnessCount;
 int brightnessCoeff;
-uint32_t ledColor_L[9];
-uint32_t ledColor_R[9];
+uint32_t ledColor_L[11];
+uint32_t ledColor_R[11];
 
 };
 #endif

@@ -41,6 +41,10 @@
   if (uxr_millis() - init > MS) { X; init = uxr_millis();} \
 } while (0)
 
+#if defined(SOFT_E_STOP)
+uint8_t bEstop=0x00;
+#endif
+
 rcl_publisher_t odom_publisher;
 rcl_publisher_t imu_publisher;
 // rcl_publisher_t range_publisher;
@@ -136,6 +140,9 @@ void setup()
 
     PM.begin();
     PM.registBatteryPercentageCallBack(BatteryCallback);
+    #if defined(SOFT_E_STOP)
+    PM.registEStopCallBack(EstopCallback);
+    #endif
     PM.led_setup(NUMBER_OF_LED_L,NUMBER_OF_LED_R,LED_PIN_L,LED_PIN_R,NEO_GRB + NEO_KHZ800);
     PM.enableLeftSwitch(true);
     PM.enableRightSwitch(true);
@@ -155,11 +162,11 @@ void loop() {
     switch (state)
     {
         case WAITING_AGENT:
-            dbg_printf("WAITING_AGENT");
+            //dbg_printf("WAITING_AGENT");
             EXECUTE_EVERY_N_MS(500, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_AVAILABLE : WAITING_AGENT;);
             break;
         case AGENT_AVAILABLE:
-            dbg_printf("AGENT_AVAILABLE");
+            //dbg_printf("AGENT_AVAILABLE");
             state = (true == createEntities()) ? AGENT_CONNECTED : WAITING_AGENT;
             if (state == WAITING_AGENT)
             {
@@ -167,7 +174,7 @@ void loop() {
             }
             break;
         case AGENT_CONNECTED:
-            dbg_printf("AGENT_CONNECTED");
+            //dbg_printf("AGENT_CONNECTED");
             EXECUTE_EVERY_N_MS(200, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
             if (state == AGENT_CONNECTED)
             {
@@ -175,15 +182,36 @@ void loop() {
             }
             break;
         case AGENT_DISCONNECTED:
-            dbg_printf("AGENT_DISCONNECTED");
+            //dbg_printf("AGENT_DISCONNECTED");
             destroyEntities();
             state = WAITING_AGENT;
             break;
         default:
             break;
     }
-    // PM.processPowerManagement();
+
+    PM.processPowerManagement();
 }
+
+#if defined(SOFT_E_STOP)
+void EstopCallback(uint8_t bEnable)
+{
+  dbg_printf("EstopCallback:%x\r\n",bEnable);
+
+  bEstop=bEnable;
+  if(bEstop==E_STOP_ENABLE)
+  {
+    fullStop();
+    PM.enableHSwitch(0,0,true);
+    PM.setLedStatus(LED_STATES_E_STOP);
+  }
+  else
+  {
+    PM.enableHSwitch(1,1,true);
+    PM.setLedStatus(LED_STATES_OFF);
+  }
+}
+#endif
 
 void controlCallback(rcl_timer_t * timer, int64_t last_call_time)
 {
@@ -192,10 +220,6 @@ void controlCallback(rcl_timer_t * timer, int64_t last_call_time)
     {
        moveBase();
        publishDataTest();
-       PM.processLM5066I();
-       PM.processBTT6030();
-       PM.updateBatteryPercentage();
-       PM.process_led();
     }
 }
 
@@ -419,7 +443,11 @@ void fullStop()
 void moveBase()
 {
     // brake if there's no command received, or when it's only the first command sent
+    #if defined(SOFT_E_STOP)
+    if(in_brake || (bEstop==E_STOP_ENABLE) || ((millis() - prev_cmd_time) >= 200))
+    #else
     if(in_brake || ((millis() - prev_cmd_time) >= 200))
+    #endif
     {
         twist_msg.linear.x = 0.0;
         twist_msg.linear.y = 0.0;
@@ -434,7 +462,7 @@ void moveBase()
         twist_msg.angular.z
     );
 
-    // get the current speed of each motor
+     // get the current speed of each motor
     float current_rpm1 = motor1_encoder.getRPM();
     float current_rpm2 = motor2_encoder.getRPM();
     // float current_rpm3 = motor3_encoder.getRPM();

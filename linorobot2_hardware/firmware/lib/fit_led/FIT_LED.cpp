@@ -34,6 +34,9 @@ FITLED::FITLED(){
   ledColor_L[LED_STATES_CHARGING]=strip_L.Color(255,   0,   0);
   ledColor_R[LED_STATES_CHARGING]=strip_R.Color(255,   0,   0);
 
+  ledColor_L[LED_STATES_E_STOP]=strip_L.Color(255,   0,   0);
+  ledColor_R[LED_STATES_E_STOP]=strip_R.Color(255,   0,   0);
+
   blinkInterval =666;//ms
   blinkTickCount =0;
 
@@ -160,9 +163,13 @@ void  FITLED::setLedStatus(uint8_t status)
 
   if(led_status!=status||status==LED_STATES_OFF)
   {
+    if(led_status==LED_STATES_E_STOP&&status!=LED_STATES_OFF&&status!=LED_STATES_BATTERY_LOW)
+    {
+      return;
+    }
     if(led_status==LED_STATES_BATTERY_LOW)
     {
-      if(status!=LED_STATES_BATTERY_LOW)
+      if(status!=LED_STATES_BATTERY_LOW&&prv_led_status!=LED_STATES_E_STOP)
         prv_led_status=status;
       return;
     }
@@ -409,6 +416,10 @@ void  FITLED::process_led()
           batteryLowTickCount=0;
         }
       }
+    }
+    else if(led_status==LED_STATES_E_STOP)
+    {
+      blink_LED(LED_LR,ledColor_L[LED_STATES_E_STOP]);
     }
     process_led_status=led_status;
   }
