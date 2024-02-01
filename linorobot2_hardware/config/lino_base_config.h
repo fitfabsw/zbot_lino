@@ -65,7 +65,10 @@ ROBOT ORIENTATION
 #define COUNTS_PER_REV4 54000              // wheel4 encoder's no of ticks per rev
 //
 #define WHEEL_DIAMETER 0.125                // wheel's diameter in meters
-#define LR_WHEELS_DISTANCE 0.3638            // distance between left and right wheels
+//
+//#define LR_WHEELS_DISTANCE 0.3638            // distance between left and right wheels (zbotlino1.5)
+#define LR_WHEELS_DISTANCE 0.44            // distance between left and right wheels (zbotlino2.0)
+
 #define PWM_BITS 10                          // PWM Resolution of the microcontroller
 #define PWM_FREQUENCY 20000                 // PWM Frequency
 
