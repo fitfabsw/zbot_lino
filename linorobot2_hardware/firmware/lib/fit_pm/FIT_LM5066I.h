@@ -65,6 +65,12 @@ void getAVGBlockInfo();
 void CalculatePercentage(double voltage);
 void initFITLM5066I();
 void processLM5066I();
+uint16_t DIAGNOSTIC_WORD;
+double AVG_IIN;
+double AVG_VOUT;
+double AVG_VIN;
+double AVG_PIN;
+double TEMPERATURE;
 
 protected:
 uint8_t lm5600iChipInfo[13];
@@ -72,12 +78,7 @@ int slaveAddr;
 uint32_t i2cspeed;
 unsigned long GetAVGBlockInterval;//ms
 unsigned long GetAVGBlockCount;//ms
-uint16_t DIAGNOSTIC_WORD;
-double AVG_IIN;
-double AVG_VOUT;
-double AVG_VIN;
-double AVG_PIN;
-double TEMPERATURE;
+
 int percentage=0;
 int Prvpercentage=0;
 bool binitSuccess;

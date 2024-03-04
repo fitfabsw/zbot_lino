@@ -25,6 +25,8 @@ bool isLeftOverCurrent();
 bool isRightOverCurrent();
 void processBTT6030();
 void initFITBTT6030();
+int16_t leftISAVGvalue;
+int16_t rightISAVGvalue;
 
 protected:
 unsigned long updateISValueInterval;//ms
@@ -33,8 +35,6 @@ int16_t isLeftPin;
 int16_t isRightPin;
 int16_t LeftSwitchPin;
 int16_t RightSwitchPin;
-int16_t leftISAVGvalue;
-int16_t rightISAVGvalue;
 bool bLeftSwitchOn;
 bool bRightSwitchOn;
 int overCurrent;

@@ -19,6 +19,8 @@
 #include <geometry_msgs/msg/twist.h>
 #include <geometry_msgs/msg/vector3.h>
 #include <std_msgs/msg/int32.h>
+#include <std_msgs/msg/empty.h>
+#include <std_msgs/msg/float32_multi_array.h>
 
 #include "config.h"
 #include "motor.h"
@@ -52,9 +54,14 @@ rcl_publisher_t range1_publisher;
 rcl_publisher_t range2_publisher;
 rcl_publisher_t range3_publisher;
 rcl_publisher_t range4_publisher;
+rcl_publisher_t danger_zone_publisher;
+rcl_publisher_t ok_to_go_publisher;
+rcl_publisher_t general_button_publisher;
+rcl_publisher_t deviceinfo_publisher;
 rcl_subscription_t twist_subscriber;
 rcl_subscription_t custom_subscriber;
 rcl_subscription_t led_subscriber;
+rcl_subscription_t laser_sleep_subscriber;
 
 nav_msgs__msg__Odometry odom_msg;
 sensor_msgs__msg__Imu imu_msg;
@@ -65,6 +72,9 @@ sensor_msgs__msg__Range range3_msg;
 sensor_msgs__msg__Range range4_msg;
 geometry_msgs__msg__Twist twist_msg;
 std_msgs__msg__Int32 custom_msg;
+std_msgs__msg__Int32 danger_zone_msg;
+std_msgs__msg__Empty button_msg;
+std_msgs__msg__Float32MultiArray deviceinfo_msg;
 
 rclc_executor_t executor;
 rclc_support_t support;
@@ -114,12 +124,17 @@ Kinematics kinematics(
 Odometry odometry;
 IMU imu;
 // HCSR04 range;
-HCSR04 range1("sonic1");
-HCSR04 range2("sonic2");
-HCSR04 range3("sonic3");
-HCSR04 range4("sonic4");
+HCSR04 range1((char*)"sonic1");
+HCSR04 range2((char*)"sonic2");
+HCSR04 range3((char*)"sonic3");
+HCSR04 range4((char*)"sonic4");
 bool in_brake = false;
-
+bool bDangerZoneUpdate=false;
+int batteryPercentage=100;
+bool bLidar1Danger=false;
+bool bLidar2Danger=false;
+#define DEVINFO_UPDATE_TIME 50
+uint8_t devinfoUpdateCounter=0;
 void setup()
 {
     pinMode(LED_PIN, OUTPUT);
@@ -143,10 +158,13 @@ void setup()
     #if defined(SOFT_E_STOP)
     PM.registEStopCallBack(EstopCallback);
     #endif
+    PM.registLiadrWarningCallBack(LidarWarningCallback);
+    PM.registButtonCallBack(ButtonCallback);
     PM.led_setup(NUMBER_OF_LED_L,NUMBER_OF_LED_R,LED_PIN_L,LED_PIN_R,NEO_GRB + NEO_KHZ800);
     PM.enableLeftSwitch(true);
     PM.enableRightSwitch(true);
 
+    dbg_printf("imu_ok:%x,range1_ok:%x,range2_ok:%x,range3_ok:%x,range4_ok:%x",imu_ok,range1_ok,range2_ok,range3_ok,range4_ok);
     // if(!imu_ok)
     // {
     //     while(1)
@@ -194,24 +212,97 @@ void loop() {
 }
 
 #if defined(SOFT_E_STOP)
-void EstopCallback(uint8_t bEnable)
+void EstopCallback(uint8_t bEnable,bool bUsedLowSwitch)
 {
   dbg_printf("EstopCallback:%x\r\n",bEnable);
+  if(bEstop==bEnable)
+    return;
 
   bEstop=bEnable;
   if(bEstop==E_STOP_ENABLE)
   {
     fullStop();
-    PM.enableHSwitch(0,0,true);
+    if(bUsedLowSwitch)
+      PM.enableHSwitch(0,0,true);
     PM.setLedStatus(LED_STATES_E_STOP);
   }
   else
   {
-    PM.enableHSwitch(1,1,true);
+    if(bUsedLowSwitch)
+      PM.enableHSwitch(1,1,true);
     PM.setLedStatus(LED_STATES_OFF);
   }
 }
 #endif
+
+void LidarWarningCallback(uint8_t lidarid,uint8_t status)
+{
+  dbg_printf("lidarid:%x,status:%x\r\n",lidarid,status);
+
+  if(lidarid==LIADR_ID_1)
+  {
+    if(status==LIADR_STATUS_WARRING)
+    {
+      bLidar1Danger=true;
+    }
+    else
+    {
+      bLidar1Danger=false;
+    }
+  }
+  else if(lidarid==LIADR_ID_2)
+  {
+    if(status==LIADR_STATUS_WARRING)
+    {
+      bLidar2Danger=true;
+    }
+    else
+    {
+      bLidar2Danger=false;
+    }
+  }
+
+  if(bLidar1Danger||bLidar2Danger)
+  {
+    if(danger_zone_msg.data!=LIADR_STATUS_WARRING)
+    {
+      danger_zone_msg.data=LIADR_STATUS_WARRING;
+      #if defined(SOFT_E_STOP)
+      if(digitalRead(SLEEP_ENABLE_PIN)==HIGH&&digitalRead(E_STOP_BUTTON) == HIGH)
+        EstopCallback(true,false);
+      #endif
+      bDangerZoneUpdate=true;
+    }
+  }
+  else
+  {
+    if(danger_zone_msg.data!=LIADR_STATUS_NONE)
+    {
+      danger_zone_msg.data=LIADR_STATUS_NONE;
+      #if defined(SOFT_E_STOP)
+      if(digitalRead(SLEEP_ENABLE_PIN)==HIGH&&digitalRead(E_STOP_BUTTON) == HIGH)
+        EstopCallback(false,false);
+      #endif
+      bDangerZoneUpdate=true;
+    }
+  }
+
+}
+
+void ButtonCallback(uint8_t btnid,uint8_t status)
+{
+  dbg_printf("btnid:%x,status:%x\r\n",btnid,status);
+  if(btnid==BTN_TYPE_ARRIVE)
+  {
+    if(state==AGENT_CONNECTED)
+      RCSOFTCHECK(rcl_publish(&ok_to_go_publisher, &button_msg, NULL));
+  }
+  else if(btnid==BTN_TYPE_GENERAL)
+  {
+    if(state==AGENT_CONNECTED)
+      RCSOFTCHECK(rcl_publish(&general_button_publisher, &button_msg, NULL));
+  }
+}
 
 void controlCallback(rcl_timer_t * timer, int64_t last_call_time)
 {
@@ -293,6 +384,24 @@ void ledStatusCallback(const void * msgin)
   }
 }
 
+void lasersleepStatusCallback(const void * msgin)
+{
+  const std_msgs__msg__Int32 * msg = (const std_msgs__msg__Int32 *)msgin;
+  switch (msg->data)
+  {
+      case LIDAR_SLEEP_DISABLE:
+          dbg_printf("LIDAR_SLEEP_DISABLE");
+          PM.setLidarEnterSleepMode(LIDAR_SLEEP_DISABLE);
+          break;
+      case LIDAR_SLEEP_ENABLE:
+          dbg_printf("LIDAR_SLEEP_ENABLE");
+          PM.setLidarEnterSleepMode(LIDAR_SLEEP_ENABLE);
+          break;
+      default:
+          break;
+  }
+}
+
 bool createEntities()
 {
     allocator = rcl_get_default_allocator();
@@ -339,6 +448,30 @@ bool createEntities()
         ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Range),
         "range4/data"
     ));
+    RCCHECK(rclc_publisher_init_default(
+        &danger_zone_publisher,
+        &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
+        "danger_zone"
+    ));
+    RCCHECK(rclc_publisher_init_default(
+        &ok_to_go_publisher,
+        &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Empty),
+        "ok_to_go"
+    ));
+    RCCHECK(rclc_publisher_init_default(
+        &general_button_publisher,
+        &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Empty),
+        "general_button"
+    ));
+    RCCHECK(rclc_publisher_init_default(
+        &deviceinfo_publisher,
+        &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
+        "deviceinfo"
+    ));
     // create motro_brake command subscriber
     RCCHECK(rclc_subscription_init_default(
         &custom_subscriber,
@@ -360,6 +493,13 @@ bool createEntities()
         ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
         "led_status"
     ));
+    // create laser sleep command subscriber
+    RCCHECK(rclc_subscription_init_default(
+        &laser_sleep_subscriber,
+        &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
+        "laser_sleep"
+    ));
     // create timer for actuating the motors at 50 Hz (1000/20)
     const unsigned int control_timeout = 20;
     RCCHECK(rclc_timer_init_default(
@@ -369,7 +509,7 @@ bool createEntities()
         controlCallback
     ));
     executor = rclc_executor_get_zero_initialized_executor();
-    RCCHECK(rclc_executor_init(&executor, &support.context, 4, & allocator));
+    RCCHECK(rclc_executor_init(&executor, &support.context, 5, & allocator));
     // RCCHECK(rclc_executor_init(&executor, &support.context, 3, & allocator));
     // RCCHECK(rclc_executor_init(&executor, &support.context, 2, & allocator));
     RCCHECK(rclc_executor_add_subscription(
@@ -393,6 +533,13 @@ bool createEntities()
         &twistCallback,
         ON_NEW_DATA
     ));
+    RCCHECK(rclc_executor_add_subscription(
+        &executor,
+        &laser_sleep_subscriber,
+        &custom_msg,
+        &lasersleepStatusCallback,
+        ON_NEW_DATA
+    ));
     RCCHECK(rclc_executor_add_timer(&executor, &control_timer));
 
     // synchronize time with the agent
@@ -407,21 +554,26 @@ bool destroyEntities()
     rmw_context_t * rmw_context = rcl_context_get_rmw_context(&support.context);
     (void) rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
 
-    rcl_publisher_fini(&odom_publisher, &node);
-    rcl_publisher_fini(&imu_publisher, &node);
-    rcl_subscription_fini(&twist_subscriber, &node);
+    RCCHECK(rcl_publisher_fini(&odom_publisher, &node));
+    RCCHECK(rcl_publisher_fini(&imu_publisher, &node));
+    RCCHECK(rcl_subscription_fini(&twist_subscriber, &node));
     //
-    rcl_publisher_fini(&range1_publisher, &node);
-    rcl_publisher_fini(&range2_publisher, &node);
-    rcl_publisher_fini(&range3_publisher, &node);
-    rcl_publisher_fini(&range4_publisher, &node);
-    rcl_subscription_fini(&custom_subscriber, &node);
-    rcl_subscription_fini(&led_subscriber, &node);
+    RCCHECK(rcl_publisher_fini(&range1_publisher, &node));
+    RCCHECK(rcl_publisher_fini(&range2_publisher, &node));
+    RCCHECK(rcl_publisher_fini(&range3_publisher, &node));
+    RCCHECK(rcl_publisher_fini(&range4_publisher, &node));
+    RCCHECK(rcl_publisher_fini(&danger_zone_publisher, &node));
+    RCCHECK(rcl_publisher_fini(&ok_to_go_publisher, &node));
+    RCCHECK(rcl_publisher_fini(&general_button_publisher, &node));
+    RCCHECK(rcl_publisher_fini(&deviceinfo_publisher, &node));
+    RCCHECK(rcl_subscription_fini(&custom_subscriber, &node));
+    RCCHECK(rcl_subscription_fini(&led_subscriber, &node));
+    RCCHECK(rcl_subscription_fini(&laser_sleep_subscriber, &node));
     //
-    rcl_node_fini(&node);
-    rcl_timer_fini(&control_timer);
-    rclc_executor_fini(&executor);
-    rclc_support_fini(&support);
+    RCCHECK(rcl_node_fini(&node));
+    RCCHECK(rcl_timer_fini(&control_timer));
+    RCCHECK(rclc_executor_fini(&executor));
+    RCCHECK(rclc_support_fini(&support));
 
     digitalWrite(LED_PIN, HIGH);
 
@@ -522,6 +674,41 @@ void publishDataTest()
     RCSOFTCHECK(rcl_publish(&range2_publisher, &range2_msg, NULL));
     RCSOFTCHECK(rcl_publish(&range3_publisher, &range3_msg, NULL));
     RCSOFTCHECK(rcl_publish(&range4_publisher, &range4_msg, NULL));
+
+    if(devinfoUpdateCounter>=DEVINFO_UPDATE_TIME)
+    {
+      devinfoUpdateCounter=0;
+
+      float infodata[11];
+
+      deviceinfo_msg.data.capacity=11;
+      deviceinfo_msg.data.size=0;
+      deviceinfo_msg.data.data=infodata;
+
+      deviceinfo_msg.data.data[deviceinfo_msg.data.size++]=(float)PM.AVG_VIN;
+      deviceinfo_msg.data.data[deviceinfo_msg.data.size++]=(float)PM.AVG_VOUT;
+      deviceinfo_msg.data.data[deviceinfo_msg.data.size++]=(float)PM.AVG_IIN;
+      deviceinfo_msg.data.data[deviceinfo_msg.data.size++]=(float)PM.AVG_PIN;
+      deviceinfo_msg.data.data[deviceinfo_msg.data.size++]=(float)PM.TEMPERATURE;
+      deviceinfo_msg.data.data[deviceinfo_msg.data.size++]=(float)batteryPercentage;
+      deviceinfo_msg.data.data[deviceinfo_msg.data.size++]=(float)PM.leftISAVGvalue;
+      deviceinfo_msg.data.data[deviceinfo_msg.data.size++]=(float)PM.rightISAVGvalue;
+      deviceinfo_msg.data.data[deviceinfo_msg.data.size++]=digitalRead(LIDAR_INT1);
+      deviceinfo_msg.data.data[deviceinfo_msg.data.size++]=digitalRead(LIDAR_INT2);
+      deviceinfo_msg.data.data[deviceinfo_msg.data.size++]=~digitalRead(SLEEP_ENABLE_PIN);
+
+      RCSOFTCHECK(rcl_publish(&deviceinfo_publisher, &deviceinfo_msg, NULL));
+    }
+    else
+    {
+      devinfoUpdateCounter++;
+    }
+
+    if(bDangerZoneUpdate)
+    {
+      RCSOFTCHECK(rcl_publish(&danger_zone_publisher, &danger_zone_msg, NULL));
+      bDangerZoneUpdate=false;
+    }
 }
 
 void publishData()
@@ -586,5 +773,6 @@ void flashLED(int n_times)
 void BatteryCallback(int percentage)
 {
   dbg_printf("Battery percentage:%d\r\n",percentage);
+  batteryPercentage=percentage;
 }
 

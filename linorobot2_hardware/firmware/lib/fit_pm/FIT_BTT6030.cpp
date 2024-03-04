@@ -165,8 +165,7 @@ void FITBTT6030::processISAVGvalue()
 
   if(isLeftSwitchOn())
   {
-    dbg_printf("leftISAVGvalue:%d\r\n",leftISAVGvalue);
-    dbg_printf("rightISAVGvalue:%d\r\n",rightISAVGvalue);
+    dbg_printf("L_IS:%d,R_IS:%d\r\n",leftISAVGvalue,rightISAVGvalue);
   }
 }
 
