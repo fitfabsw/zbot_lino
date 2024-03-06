@@ -142,7 +142,7 @@ void FITPM::begin()
   LIDAR_INT1_LOW_TickCount=0;
   bLiadr_INT1_HIGH=false;
   bLiadr_INT1_ACTION=false;
-  pinMode(LIDAR_INT1, INPUT_PULLUP);
+  pinMode(LIDAR_INT1, INPUT_PULLDOWN);
   attachInterrupt(digitalPinToInterrupt(LIDAR_INT1),LIDAR_INT1_CB, CHANGE);
   LIDAR_INT1_CB();
 
@@ -150,7 +150,7 @@ void FITPM::begin()
   LIDAR_INT2_LOW_TickCount=0;
   bLiadr_INT2_HIGH=false;
   bLiadr_INT2_ACTION=false;
-  pinMode(LIDAR_INT2, INPUT_PULLUP);
+  pinMode(LIDAR_INT2, INPUT_PULLDOWN);
   attachInterrupt(digitalPinToInterrupt(LIDAR_INT2),LIDAR_INT2_CB, CHANGE);
   LIDAR_INT2_CB();
 

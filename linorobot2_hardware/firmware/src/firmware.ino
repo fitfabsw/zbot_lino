@@ -695,7 +695,7 @@ void publishDataTest()
       deviceinfo_msg.data.data[deviceinfo_msg.data.size++]=(float)PM.rightISAVGvalue;
       deviceinfo_msg.data.data[deviceinfo_msg.data.size++]=digitalRead(LIDAR_INT1);
       deviceinfo_msg.data.data[deviceinfo_msg.data.size++]=digitalRead(LIDAR_INT2);
-      deviceinfo_msg.data.data[deviceinfo_msg.data.size++]=~digitalRead(SLEEP_ENABLE_PIN);
+      deviceinfo_msg.data.data[deviceinfo_msg.data.size++]=!(digitalRead(SLEEP_ENABLE_PIN));
 
       RCSOFTCHECK(rcl_publish(&deviceinfo_publisher, &deviceinfo_msg, NULL));
     }
