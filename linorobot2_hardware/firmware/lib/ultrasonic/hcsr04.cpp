@@ -22,7 +22,7 @@ sensor_msgs__msg__Range HCSR04::getData()
     digitalWrite(trigPin, HIGH);
     delayMicroseconds(10);
     digitalWrite(trigPin, LOW);
-   
+
     pinMode(echoPin, INPUT);
     duration = pulseIn(echoPin, HIGH);
     distance_m = (duration/2) * 0.01 / 29.1;     // Divide by 29.1 or multiply by 0.0343
@@ -33,7 +33,9 @@ sensor_msgs__msg__Range HCSR04::getData()
     range_msg_.min_range = 0.05;
     range_msg_.max_range = 0.5;
     range_msg_.range = distance_m;
-//
+
+    delayMicroseconds(2000);
+
     return range_msg_;
 }
 

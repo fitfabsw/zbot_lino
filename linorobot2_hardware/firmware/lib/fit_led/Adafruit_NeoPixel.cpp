@@ -247,9 +247,7 @@ extern "C" void k210Show(uint8_t pin, uint8_t *pixels, uint32_t numBytes,
 /*!
   @brief   Transmit pixel data in RAM to NeoPixels.
   @note    On most architectures, interrupts are temporarily disabled in
-           order to achieve the correct NeoPixel signal timing. This means
-           that the Arduino millis() and micros() functions, which require
-           interrupts, will lose small intervals of time whenever this
+           order to achieve the copulseInmall intervals of time whenever this
            function is called (about 30 microseconds per RGB pixel, 40 for
            RGBW pixels). There's no easy fix for this, but a few
            specialized alternative or companion libraries exist that use

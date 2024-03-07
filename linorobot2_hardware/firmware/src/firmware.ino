@@ -652,9 +652,10 @@ void publishDataTest()
     odom_msg = odometry.getData();
     imu_msg = imu.getData();
     range1_msg = range1.getData();
+    range4_msg = range4.getData();
     range2_msg = range2.getData();
     range3_msg = range3.getData();
-    range4_msg = range4.getData();
+
     struct timespec time_stamp = getTime();
     odom_msg.header.stamp.sec = time_stamp.tv_sec;
     odom_msg.header.stamp.nanosec = time_stamp.tv_nsec;
