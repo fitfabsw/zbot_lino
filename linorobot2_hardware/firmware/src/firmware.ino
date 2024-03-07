@@ -144,10 +144,10 @@ void setup()
     int echoPin1 = 24;
     int trigPin2 = 27;
     int echoPin2 = 26;
-    int trigPin3 = 6;
-    int echoPin3 = 5;
-    int trigPin4 = 8;
-    int echoPin4 = 7;
+    int trigPin3 = 8;
+    int echoPin3 = 7;
+    int trigPin4 = 6;
+    int echoPin4 = 5;
     bool range1_ok = range1.init(trigPin1, echoPin1);
     bool range2_ok = range2.init(trigPin2, echoPin2);
     bool range3_ok = range3.init(trigPin3, echoPin3);
