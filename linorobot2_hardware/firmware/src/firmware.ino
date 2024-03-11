@@ -135,6 +135,9 @@ bool bLidar1Danger=false;
 bool bLidar2Danger=false;
 #define DEVINFO_UPDATE_TIME 50
 uint8_t devinfoUpdateCounter=0;
+
+void(* resetFunc) (void) = 0;
+
 void setup()
 {
     pinMode(LED_PIN, OUTPUT);
@@ -753,6 +756,8 @@ struct timespec getTime()
 
 void rclErrorLoop()
 {
+    resetFunc();
+
     while(true)
     {
         flashLED(2);
