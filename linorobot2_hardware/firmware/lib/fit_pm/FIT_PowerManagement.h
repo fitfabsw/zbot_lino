@@ -45,6 +45,8 @@
 #define LIDAR_SLEEP_DISABLE 0x00
 #define LIDAR_SLEEP_ENABLE  0x01
 
+#define LIDAR_READY_DELAY_TIME 8000
+
 class FITPM : public FITLM5066I, public FITBTT6030, public FITLED{
 
 public:
@@ -87,6 +89,9 @@ bool bLiadr_INT1_ACTION;
 
 bool bLiadr_INT2_HIGH;
 bool bLiadr_INT2_ACTION;
+
+bool bLiadrReady;
+unsigned long waittingLiadrReadyCount=0;//ms
 
 bool bArrive_BTN_Press;
 bool bArrive_ACTION;

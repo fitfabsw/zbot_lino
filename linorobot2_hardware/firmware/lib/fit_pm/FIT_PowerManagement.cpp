@@ -144,7 +144,7 @@ void FITPM::begin()
   bLiadr_INT1_ACTION=false;
   pinMode(LIDAR_INT1, INPUT_PULLDOWN);
   attachInterrupt(digitalPinToInterrupt(LIDAR_INT1),LIDAR_INT1_CB, CHANGE);
-  LIDAR_INT1_CB();
+  //LIDAR_INT1_CB();
 
   LIDAR_INT2_HIGH_TickCount=0;
   LIDAR_INT2_LOW_TickCount=0;
@@ -152,8 +152,8 @@ void FITPM::begin()
   bLiadr_INT2_ACTION=false;
   pinMode(LIDAR_INT2, INPUT_PULLDOWN);
   attachInterrupt(digitalPinToInterrupt(LIDAR_INT2),LIDAR_INT2_CB, CHANGE);
-  LIDAR_INT2_CB();
-
+  //LIDAR_INT2_CB();
+  bLiadrReady=false;
 
   ARRIVE_BTN_INT_Press_TickCount=0;
   ARRIVE_BTN_INT_Release_TickCount=0;
@@ -161,7 +161,7 @@ void FITPM::begin()
   bArrive_ACTION=false;
   pinMode(ARRIVE_BTN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(ARRIVE_BTN),ARRIVE_BTN_CB, CHANGE);
-  ARRIVE_BTN_CB();
+  //ARRIVE_BTN_CB();
 
   GENERAL_BTN_INT_Press_TickCount=0;
   GENERAL_BTN_INT_Release_TickCount=0;
@@ -170,6 +170,8 @@ void FITPM::begin()
   pinMode(GENERAL_BTN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(GENERAL_BTN),GENERAL_BTN_CB, CHANGE);
   GENERAL_BTN_CB();
+
+  waittingLiadrReadyCount=millis();
 }
 
 #if defined(SOFT_E_STOP)
@@ -234,6 +236,17 @@ void FITPM::registEStopCallBack(void (*callback_func_ptr)(uint8_t,bool))
 
 void FITPM::process_Liadr_Warning_Interrupt()
 {
+  if(!bLiadrReady)
+  {
+    if(millis()-waittingLiadrReadyCount>=LIDAR_READY_DELAY_TIME)
+    {
+      bLiadrReady=true;
+      LIDAR_INT1_CB();
+      LIDAR_INT2_CB();
+    }
+    return;
+  }
+
   if(!bLiadr_INT1_HIGH)
   {
     if(LIDAR_INT1_HIGH_TickCount!=0)
